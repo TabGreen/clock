@@ -4,7 +4,7 @@ const height = 500;
 const inset = 15;
 const updateTime = 30;
 
-const light = 0.35;
+const light = 0.45;
 
 const clockScaleWidth_blod = 8;
 const clockScaleLength_blod = 8;
@@ -18,15 +18,15 @@ const clockBorderWidth = 15;
 const clockFaceColor = [240,240,240];
 
 const clockHourHandColor = [0,0,0];
-const clockHourHandWidth = 5;
+const clockHourHandWidth = 8;
 const clockHourHandLengthOfHeight = 0.5;
 
 const clockMinuteHandColor = [0,0,0];
-const clockMinuteHandWidth = 3;
+const clockMinuteHandWidth = 5.8;
 const clockMinuteHandLengthOfHeight = 0.7;
 
 const clockSecondHandColor = [255,0,0];
-const clockSecondHandWidth = 2;
+const clockSecondHandWidth = 3.2;
 const clockSecondHandLengthOfHeight = 0.9;
 //otherConstants
 const centerPos = [width/2,height/2];
@@ -34,9 +34,18 @@ const realWidth = width - inset*2;
 const radius = realWidth/2;
 const clockFaceWidth = realWidth - clockBorderWidth*2;
 const clockFaceRadius = clockFaceWidth/2;
+
+const clockHourHandLength = radius*clockHourHandLengthOfHeight;
+const clockMinuteHandLength = radius*clockMinuteHandLengthOfHeight;
+const clockSecondHandLength = radius*clockSecondHandLengthOfHeight;
 //numbers
+const 周角的度数 = 360;
+const 时钟上一圈的小时数 = 12;
 const 时钟上一大格的角度 = 30;
 const 时钟上一小格的角度 = 30/4;
+const 一小时的分数 = 60;
+const 一分钟的秒数 = 60;
+const 一秒钟的毫秒数 = 1000;
 //cvsEl
 const cvsEl = document.getElementById("canvas");
 const ctx = cvsEl.getContext("2d");
@@ -137,9 +146,6 @@ function drawFace(){
             }
         }
     }
-    function drawCenterPoint(){
-        //code here
-    }
 
     drawFace_BG();
     drawFace_scale();
@@ -157,6 +163,75 @@ function getPointOnCircle(r, thetaDegrees, width) {
     y += width / 2; // 反转 y 坐标并移至画布中心
     return [x, y];
 }
+//drawHands
+const clockHourHandGradient = creatGradient(clockHourHandColor);
+const clockMinuteHandGradient = creatGradient(clockMinuteHandColor);
+const clockSecondHandGradient = creatGradient(clockSecondHandColor);
+function drawHands(){
+    function drawHand(point1,point2,handIndex){
+        buffer.beginPath();
+        buffer.moveTo(point1[0],point1[1]);
+        buffer.lineTo(point2[0],point2[1]);
+        switch(handIndex){
+            case 0://时针
+                buffer.lineWidth = clockHourHandWidth;
+                buffer.strokeStyle = clockHourHandGradient;
+                break;
+            case 1://分针
+                buffer.lineWidth = clockMinuteHandWidth;
+                buffer.strokeStyle = clockMinuteHandGradient;
+                break;
+            case 2://秒针
+                buffer.lineWidth = clockSecondHandWidth;
+                buffer.strokeStyle = clockSecondHandGradient;
+                break;
+        }
+        buffer.stroke();
+    }
+    function drawHourHand(){
+        let hDegrees = t[0]/时钟上一圈的小时数*周角的度数;
+        let moreDegress = t[1]/一小时的分数*时钟上一大格的角度;
+
+        let degrees = hDegrees + moreDegress;
+        let point1 = getPointOnCircle(clockHourHandLength,degrees,clockFaceWidth);
+        point1 = point1.map((e)=>{return e + inset + clockBorderWidth});
+        drawHand(centerPos,point1,0);
+    }
+    function drawMinuteHand(){
+        let mDegress = t[1]/一小时的分数*周角的度数;
+        let moreDegress = t[2]/一分钟的秒数*时钟上一小格的角度;
+
+        let degrees = mDegress + moreDegress;
+        let point1 = getPointOnCircle(clockMinuteHandLength,degrees,clockFaceWidth);
+        point1 = point1.map((e)=>{return e + inset + clockBorderWidth});
+        drawHand(centerPos,point1,1);
+    }
+    function drawSecondHand(){
+        let sDegress = t[2]/一分钟的秒数*周角的度数;
+        let moreDegress = t[3]/一秒钟的毫秒数*时钟上一小格的角度;
+
+        let degrees = sDegress + moreDegress;
+        let point1 = getPointOnCircle(clockSecondHandLength,degrees,clockFaceWidth);
+        point1 = point1.map((e)=>{return e + inset + clockBorderWidth});
+        drawHand(centerPos,point1,2);
+    }
+
+    function drawCenterPoint(){
+        //code here
+        buffer.beginPath();
+        buffer.fillStyle = clockBorderGradient;
+        buffer.arc(centerPos[0],centerPos[1],clockHourHandWidth/2,0,Math.PI*2);
+        buffer.closePath();
+        buffer.fill();
+    }
+
+    let t = getTime();
+    if(t[0]>=12){t[0]-=12;}
+    drawHourHand();
+    drawMinuteHand();
+    drawSecondHand();
+    drawCenterPoint();
+}
 //update
 function renderFrame(){
     ctx.clearRect(0,0,width,height);
@@ -166,6 +241,7 @@ function update(){
     buffer.clearRect(0,0,width,height);
     drawBorder();
     drawFace();
+    drawHands();
 
     renderFrame();
 }
