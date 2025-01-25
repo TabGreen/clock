@@ -6,6 +6,12 @@ const updateTime = 30;
 
 const light = 0.35;
 
+const clockScaleWidth_blod = 8;
+const clockScaleLength_blod = 8;
+const clockScaleWidth_normal = 3;
+const clockScaleLength_normal = 3;
+const clockScaleColor = [0,0,0];
+
 const clockBorderColor = [10,10,10];
 const clockBorderWidth = 15;
 
@@ -25,15 +31,24 @@ const clockSecondHandLengthOfHeight = 0.9;
 //otherConstants
 const centerPos = [width/2,height/2];
 const realWidth = width - inset*2;
-const realHeight = height - inset*2;
-const radius = Math.min(realWidth,realHeight)/2;
+const radius = realWidth/2;
+const clockFaceWidth = realWidth - clockBorderWidth*2;
+const clockFaceRadius = clockFaceWidth/2;
+//numbers
+const 时钟上一大格的角度 = 30;
+const 时钟上一小格的角度 = 30/4;
 //cvsEl
 const cvsEl = document.getElementById("canvas");
 const ctx = cvsEl.getContext("2d");
+
+const bufferEL = document.createElement('canvas');
+const buffer = bufferEL.getContext("2d");
 //setCVSEl
 function setCVSElSize(){
     cvsEl.width = width;
     cvsEl.height = height;
+    bufferEL.width = width;
+    bufferEL.height = height;
 }
 function setCVSElPos(){
     cvsEl.style.top = (window.innerHeight - height)/2 + 'px';
@@ -68,7 +83,7 @@ function creatGradient(color){
     const color_text = `rgb(${color[0]},${color[1]},${color[2]})`;
     let color2 = Tolight(color,light);
     const color_text_light = `rgb(${color2[0]},${color2[1]},${color2[2]})`;
-    const clockBorderGradient = ctx.createLinearGradient(0,0,width,height);
+    const clockBorderGradient = buffer.createLinearGradient(0,0,width,height);
     clockBorderGradient.addColorStop(0,color_text_light);
     clockBorderGradient.addColorStop(1,color_text);
     return clockBorderGradient;
@@ -77,36 +92,81 @@ function creatGradient(color){
 //drawBorder
 const clockBorderGradient = creatGradient(clockBorderColor);
 function drawBorder(){
-    ctx.beginPath();
-    ctx.lineWidth = clockBorderWidth;
-    ctx.strokeStyle = clockBorderGradient;
-    ctx.arc(centerPos[0],centerPos[1],radius,0,Math.PI*2);
-    ctx.closePath();
-    ctx.stroke();
+    buffer.beginPath();
+    buffer.lineWidth = clockBorderWidth;
+    buffer.strokeStyle = clockBorderGradient;
+    buffer.arc(centerPos[0],centerPos[1],radius,0,Math.PI*2);
+    buffer.closePath();
+    buffer.stroke();
 }
 //drawFace
 const clockFaceGradient = creatGradient(clockFaceColor);
+const clockScaleGradient = creatGradient(clockScaleColor);
 function drawFace(){
     function drawFace_BG(){
-        ctx.beginPath();
-        ctx.fillStyle = clockFaceGradient;
-        ctx.arc(centerPos[0],centerPos[1],
+        buffer.beginPath();
+        buffer.fillStyle = clockFaceGradient;
+        buffer.arc(centerPos[0],centerPos[1],
             radius-clockBorderWidth/2
         ,0,Math.PI*2);
-        ctx.closePath();
-        ctx.fill();
+        buffer.closePath();
+        buffer.fill();
     }
     function drawFace_scale(){//绘制刻度
+        function drawScale(point1,point2,isBlod = false){
+            buffer.beginPath();
+            buffer.moveTo(point1[0],point1[1]);
+            buffer.lineTo(point2[0],point2[1]);
+            buffer.lineWidth = isBlod ? clockScaleWidth_blod : clockScaleWidth_normal;
+            buffer.strokeStyle = clockScaleGradient;
+            buffer.stroke();
+        }
+        for(let i = 0;i < 12;i++){
+            let point1 = getPointOnCircle(clockFaceRadius,i*时钟上一大格的角度,clockFaceWidth);
+            point1 =  point1.map((e)=>{return e + inset + clockBorderWidth});
+            let point2 = getPointOnCircle(clockFaceRadius-clockScaleLength_blod,i*时钟上一大格的角度,clockFaceWidth);
+            point2 = point2.map((e)=>{return e  + inset + clockBorderWidth});
+            drawScale(point1,point2,true);
+
+            for(let j = 1;j < 4;j++){
+                let point1 = getPointOnCircle(clockFaceRadius-clockScaleLength_normal,i*时钟上一大格的角度+j*时钟上一小格的角度,clockFaceWidth);
+                point1 = point1.map((e)=>{return e + inset + clockBorderWidth});
+                let point2 = getPointOnCircle(clockFaceRadius-clockScaleLength_normal-clockScaleLength_normal,i*时钟上一大格的角度+j*时钟上一小格的角度,clockFaceWidth);
+                point2 = point2.map((e)=>{return e + inset + clockBorderWidth});
+                drawScale(point1,point2);
+            }
+        }
+    }
+    function drawCenterPoint(){
         //code here
     }
 
     drawFace_BG();
+    drawFace_scale();
 }
-
+//getPointOnCircle
+function getPointOnCircle(r, thetaDegrees, width) {
+    // 将角度从度转换为弧度，并调整角度，使0度指向正上方
+    const adjustedThetaDegrees = (thetaDegrees - 90) % 360; // 调整角度
+    const thetaRadians = (adjustedThetaDegrees * Math.PI) / 180;
+    // 计算 x 和 y 坐标
+    let x = r * Math.cos(thetaRadians);
+    let y = r * Math.sin(thetaRadians);
+    // 调整坐标以适应 canvas 的坐标系统
+    x += width / 2; // 圆心移至画布中心
+    y += width / 2; // 反转 y 坐标并移至画布中心
+    return [x, y];
+}
 //update
-function update(){
+function renderFrame(){
     ctx.clearRect(0,0,width,height);
+    ctx.drawImage(bufferEL,0,0);
+}
+function update(){
+    buffer.clearRect(0,0,width,height);
     drawBorder();
     drawFace();
+
+    renderFrame();
 }
 setInterval(update,updateTime);
