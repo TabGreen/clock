@@ -42,7 +42,7 @@ const clockSecondHandLength = radius*clockSecondHandLengthOfHeight;
 const 周角的度数 = 360;
 const 时钟上一圈的小时数 = 12;
 const 时钟上一大格的角度 = 30;
-const 时钟上一小格的角度 = 30/4;
+const 时钟上一小格的角度 = 30/5;
 const 一小时的分数 = 60;
 const 一分钟的秒数 = 60;
 const 一秒钟的毫秒数 = 1000;
@@ -137,7 +137,7 @@ function drawFace(){
             point2 = point2.map((e)=>{return e  + inset + clockBorderWidth});
             drawScale(point1,point2,true);
 
-            for(let j = 1;j < 4;j++){
+            for(let j = 1;j < 5;j++){
                 let point1 = getPointOnCircle(clockFaceRadius-clockScaleLength_normal,i*时钟上一大格的角度+j*时钟上一小格的角度,clockFaceWidth);
                 point1 = point1.map((e)=>{return e + inset + clockBorderWidth});
                 let point2 = getPointOnCircle(clockFaceRadius-clockScaleLength_normal-clockScaleLength_normal,i*时钟上一大格的角度+j*时钟上一小格的角度,clockFaceWidth);
@@ -189,7 +189,7 @@ function drawHands(){
         buffer.stroke();
     }
     function drawHourHand(){
-        let hDegrees = t[0]/时钟上一圈的小时数*周角的度数;
+        let hDegrees = t[0]*时钟上一大格的角度;
         let moreDegress = t[1]/一小时的分数*时钟上一大格的角度;
 
         let degrees = hDegrees + moreDegress;
@@ -198,7 +198,7 @@ function drawHands(){
         drawHand(centerPos,point1,0);
     }
     function drawMinuteHand(){
-        let mDegress = t[1]/一小时的分数*周角的度数;
+        let mDegress = t[1]*时钟上一小格的角度;
         let moreDegress = t[2]/一分钟的秒数*时钟上一小格的角度;
 
         let degrees = mDegress + moreDegress;
@@ -207,7 +207,7 @@ function drawHands(){
         drawHand(centerPos,point1,1);
     }
     function drawSecondHand(){
-        let sDegress = t[2]/一分钟的秒数*周角的度数;
+        let sDegress = t[2]*时钟上一小格的角度;
         let moreDegress = t[3]/一秒钟的毫秒数*时钟上一小格的角度;
 
         let degrees = sDegress + moreDegress;
