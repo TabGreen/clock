@@ -169,23 +169,50 @@ const clockMinuteHandGradient = creatGradient(clockMinuteHandColor);
 const clockSecondHandGradient = creatGradient(clockSecondHandColor);
 function drawHands(){
     function drawHand(point1,point2,handIndex){
-        buffer.beginPath();
-        buffer.moveTo(point1[0],point1[1]);
-        buffer.lineTo(point2[0],point2[1]);
+
         switch(handIndex){
             case 0://时针
                 buffer.lineWidth = clockHourHandWidth;
                 buffer.strokeStyle = clockHourHandGradient;
+                buffer.fillStyle = clockHourHandGradient;
                 break;
             case 1://分针
                 buffer.lineWidth = clockMinuteHandWidth;
                 buffer.strokeStyle = clockMinuteHandGradient;
+                buffer.fillStyle = clockMinuteHandGradient;
                 break;
             case 2://秒针
                 buffer.lineWidth = clockSecondHandWidth;
                 buffer.strokeStyle = clockSecondHandGradient;
+                buffer.fillStyle = clockSecondHandGradient;
                 break;
         }
+        function drawHand_Point(){
+            buffer.beginPath();
+            let clockHandPointRadius;
+            switch(handIndex){
+                case 0://时针
+                    clockHandPointRadius = clockHourHandWidth/2;
+                    break;
+                case 1://分针
+                    clockHandPointRadius = clockMinuteHandWidth/2;
+                    break;
+                case 2://秒针
+                    clockHandPointRadius = clockSecondHandWidth/2;
+                    break;
+            }
+            buffer.arc(point1[0],point1[1],clockHandPointRadius,0,Math.PI*2);
+            buffer.closePath();
+            buffer.fill();
+            buffer.arc(point2[0],point2[1],clockHandPointRadius,0,Math.PI*2);
+            buffer.closePath();
+            buffer.fill();
+            buffer.closePath();
+        }
+        drawHand_Point();
+        buffer.beginPath();
+        buffer.moveTo(point1[0],point1[1]);
+        buffer.lineTo(point2[0],point2[1]);
         buffer.stroke();
     }
     function drawHourHand(){
@@ -219,10 +246,12 @@ function drawHands(){
     function drawCenterPoint(){
         //code here
         buffer.beginPath();
-        buffer.fillStyle = clockBorderGradient;
-        buffer.arc(centerPos[0],centerPos[1],clockHourHandWidth/2,0,Math.PI*2);
+        buffer.fillStyle = clockMinuteHandGradient;
+        buffer.arc(centerPos[0],centerPos[1],clockMinuteHandWidth/2,0,Math.PI*2);
         buffer.closePath();
         buffer.fill();
+        buffer.lineWidth = clockSecondHandWidth;
+        buffer.stroke();
     }
 
     let t = getTime();
